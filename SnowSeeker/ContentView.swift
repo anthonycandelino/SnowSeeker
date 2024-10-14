@@ -7,22 +7,46 @@
 
 import SwiftUI
 
+enum SortOption {
+    case defaultOrder, alphabetical, country
+}
+
 struct ContentView: View {
     let resorts: [Resort] = Bundle.main.decode("resorts.json")
     
     @State private var favorites = Favorites()
     @State private var searchText = ""
+    @State private var sortOption: SortOption = .defaultOrder
     
     var filteredResorts: [Resort] {
+        let sortedResorts: [Resort]
+        
+        switch sortOption {
+        case .alphabetical:
+            sortedResorts = resorts.sorted { $0.name < $1.name }
+        case .country:
+            sortedResorts = resorts.sorted { $0.country < $1.country }
+        case .defaultOrder:
+            sortedResorts = resorts
+        }
+        
         if searchText.isEmpty {
-            resorts
+            return sortedResorts
         } else {
-            resorts.filter { $0.name.localizedStandardContains(searchText) }
+            return sortedResorts.filter { $0.name.localizedStandardContains(searchText) }
         }
     }
     
     var body: some View {
         NavigationSplitView {
+            HStack {
+                Spacer()
+                Picker("Sort by", selection: $sortOption) {
+                    Text("Default").tag(SortOption.defaultOrder)
+                    Text("Alphabetical").tag(SortOption.alphabetical)
+                    Text("Country").tag(SortOption.country)
+                }
+            }
             List(filteredResorts) { resort in
                 NavigationLink(value: resort) {
                     HStack {
